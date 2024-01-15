@@ -6,6 +6,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,9 +21,41 @@ public class TicTacToeService extends Service {
 
 
     public void newGame() {
-        gameField = List.of(" ", " ", " ", " ", " ", " ", " ", " ", " ");
+        gameField = new ArrayList<String>(List.of(" ", " ", " ", " ", " ", " ", " ", " ", " "));
         currentPlayer = "X";
         isActive = true;
+    }
+
+    public String checkWin(){
+        if (gameField.get(0).equals(gameField.get(1)) && gameField.get(1).equals(gameField.get(2)) && !gameField.get(0).equals(" ")) {
+            return gameField.get(0);
+        } else if (gameField.get(3).equals(gameField.get(4)) && gameField.get(4).equals(gameField.get(5)) && !gameField.get(3).equals(" ")) {
+            return gameField.get(3);
+        } else if (gameField.get(6).equals(gameField.get(7)) && gameField.get(7).equals(gameField.get(8)) && !gameField.get(6).equals(" ")) {
+            return gameField.get(6);
+        } else if (gameField.get(0).equals(gameField.get(3)) && gameField.get(3).equals(gameField.get(6)) && !gameField.get(0).equals(" ")) {
+            return gameField.get(0);
+        } else if (gameField.get(1).equals(gameField.get(4)) && gameField.get(4).equals(gameField.get(7)) && !gameField.get(1).equals(" ")) {
+            return gameField.get(1);
+        } else if (gameField.get(2).equals(gameField.get(5)) && gameField.get(5).equals(gameField.get(8)) && !gameField.get(2).equals(" ")) {
+            return gameField.get(2);
+        } else if (gameField.get(0).equals(gameField.get(4)) && gameField.get(4).equals(gameField.get(8)) && !gameField.get(0).equals(" ")) {
+            return gameField.get(0);
+        } else if (gameField.get(2).equals(gameField.get(4)) && gameField.get(4).equals(gameField.get(6)) && !gameField.get(2).equals(" ")) {
+            return gameField.get(2);
+        } else if (!gameField.contains(" ")) {
+            return "draw";
+        } else {
+            return " ";
+        }
+    }
+
+    public void setField(int index) {
+
+
+        if (gameField.get(index).equals(" ")) {
+            gameField.set(index, currentPlayer);
+        }
     }
 
 

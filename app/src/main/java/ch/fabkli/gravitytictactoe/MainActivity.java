@@ -14,7 +14,6 @@ import android.os.IBinder;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -22,7 +21,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     private final float[] rotationMatrix = new float[9];
@@ -50,10 +48,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor accelerometer, magnetometer;
     private float[] gravity, geomagnetic;
     private TextView output;
+    private boolean clicked = false;
+    private boolean previewEnabled = true;
 
     public void drawPreview(int XPosition, int ZPosition) {
 
-        if (!tttServiceBound || !tttService.isActive) {
+        if (!tttServiceBound || !tttService.isActive || !previewEnabled)  {
             return;
         }
 
@@ -81,14 +81,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
         gridLayout.addView(view2);
         GridLayout.LayoutParams params2 = (GridLayout.LayoutParams) view2.getLayoutParams();
-        params2.rowSpec = GridLayout.spec(XPosition * 10 - 5- 1, 3, 1f);
-        params2.columnSpec = GridLayout.spec(ZPosition * 10 - 5- 1, 3, 1f);
+        params2.rowSpec = GridLayout.spec(XPosition * 10 - 5 - 1, 3, 1f);
+        params2.columnSpec = GridLayout.spec(ZPosition * 10 - 5 - 1, 3, 1f);
         params2.width = 0;
         params2.height = 0;
         view2.setLayoutParams(params2);
 
-        oldX = XPosition ;
-        oldY = ZPosition ;
+        oldX = XPosition;
+        oldY = ZPosition;
     }
 
     public void drawField() {
@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (i % 10 == 0 || j % 10 == 0) {
                     view.setBackgroundColor(Color.WHITE);
                 } else {
-                    view.setBackgroundColor(Color.TRANSPARENT);
+                    view.setBackgroundColor(Color.BLACK);
                 }
                 gridLayout.addView(view);
                 GridLayout.LayoutParams params = (GridLayout.LayoutParams) view.getLayoutParams();
@@ -129,6 +129,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void drawX(int x, int y) {
+//        Toast.makeText(this, "drawX", Toast.LENGTH_SHORT).show();
 
         List<List<Integer>> viewDefinitions = List.of(
                 List.of(-2, -2),
@@ -142,14 +143,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 List.of(2, -2)
         );
 
+        GridLayout gridLayout = findViewById(R.id.signs);
         for (List<Integer> viewDefinition : viewDefinitions) {
-            GridLayout gridLayout = findViewById(R.id.signs);
             View view = new View(this);
             view.setBackgroundColor(Color.argb(255, 255, 0, 0));
             gridLayout.addView(view);
             GridLayout.LayoutParams params = (GridLayout.LayoutParams) view.getLayoutParams();
-            params.rowSpec = GridLayout.spec(x * 10 - 5 + viewDefinition.get(0), 1, 1f);
-            params.columnSpec = GridLayout.spec(y * 10 - 5 + viewDefinition.get(1), 1, 1f);
+            params.rowSpec = GridLayout.spec(x * 10 - 5 + viewDefinition.get(0).intValue(), 1, 1f);
+            params.columnSpec = GridLayout.spec(y * 10 - 5 + viewDefinition.get(1).intValue(), 1, 1f);
             params.width = 0;
             params.height = 0;
             view.setLayoutParams(params);
@@ -208,26 +209,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                leftTime[0]--;
-                countdownView.setText(String.valueOf(leftTime[0]));
 
+                leftTime[0] -= 1;
+                if (clicked && leftTime[0] >0){
+                    clicked = false;
+                    leftTime[0] = 0;
+                }
+                if (clicked && leftTime[0] <= 0){
+                    clicked = false;
+                }
+                if (leftTime[0] > 0) {
+                    previewEnabled = true;
+
+                    countdownView.setText("Player "+tttService.currentPlayer +" hat noch "+String.valueOf(leftTime[0])+" Sekunden");
+                }
                 if (leftTime[0] == 0) {
                     countdownView.setText("Time's up!");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (tttService.currentPlayer.equals("X")) {
+                                drawX(oldX, oldY);
+                            } else {
+                                drawO(oldX, oldY);
+                            }
 
-                    if (tttService.currentPlayer.equals("X")) {
-                        drawX(oldX, oldY);
-                    } else {
-                        drawO(oldX, oldY);
-                    }
+                            int fieldIndex = (oldY - 1) * 3 + oldX - 1;
+                            tttService.setField(fieldIndex);
+//                            tttService.gameField.set(fieldIndex, tttService.currentPlayer);
+                            changePlayer();
 
-//                    int fieldIndex = (oldX - 1) * 3 + oldY - 1;
-//                    Toast.makeText(MainActivity.this, fieldIndex, Toast.LENGTH_SHORT).show();
-//                    tttService.gameField.set(fieldIndex, tttService.currentPlayer);
-
-//                    changePlayer();
-
-
-//                    countDown();
+                            previewEnabled = false;
+                            drawField();
+                            String winner = tttService.checkWin();
+                            TextView output = findViewById(R.id.output);
+                            output.setText(winner);
+                        }
+                    });
+                }
+                if (leftTime[0] == -1) {
+                    countdownView.setText("Gerät übergeben!");
+                }
+                if (leftTime[0] == -5) {
+                    countDown();
                     timer.cancel();
                 }
             }
@@ -253,7 +277,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         TextView title = findViewById(R.id.title);
-        output = findViewById(R.id.output);
         title.setText("Gravity Tic Tac Toe");
 
         drawField();
@@ -273,15 +296,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         constraintLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                output.setText("Click");
                 if (tttServiceBound && !tttService.isActive) {
                     tttService.newGame();
-                    output.setText("New Game");
-//                    wait 2 seconds
-                    drawO(1, 1);
-                    drawX(1, 2);
                     drawPreview(oldX, oldY);
                     countDown();
+                } else if (tttServiceBound && tttService.isActive){
+                    clicked = true;
                 }
             }
         });
@@ -330,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     ZPosition = 1;
                 }
 
-                if (XPosition != oldX || ZPosition != oldY){
+                if (XPosition != oldX || ZPosition != oldY) {
                     drawPreview(XPosition, ZPosition);
                 }
 
