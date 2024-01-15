@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
+    android:id="@+id/constraintLayout"
     tools:context=".MainActivity">
 
     <TextView
@@ -45,18 +46,42 @@
 
     <TextView
         android:id="@+id/output"
-        android:layout_width="302dp"
-        android:layout_height="82dp"
+        android:layout_width="141dp"
+        android:layout_height="62dp"
         android:text="output"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.688"
+        app:layout_constraintHorizontal_bias="0.877"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.117" />
+        app:layout_constraintVertical_bias="0.13" />
+
+    <TextView
+        android:id="@+id/countdown"
+        android:layout_width="141dp"
+        android:layout_height="62dp"
+        android:text="countdown"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.185"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.13" />
 
     <GridLayout
         android:id="@+id/gridLayout"
+        android:layout_width="394dp"
+        android:layout_height="394dp"
+        android:columnCount="30"
+        android:padding="1dp"
+        android:rowCount="30"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <GridLayout
+        android:id="@+id/signs"
         android:layout_width="394dp"
         android:layout_height="394dp"
         android:columnCount="30"
