@@ -81,4 +81,41 @@ public class TicTacToeServiceTest{
         service.gameField = new ArrayList<String>(List.of("O", "X", "X", "X", "O", "O", "O", "X", "X"));
         assertEquals("draw", service.checkWin());
     }
+
+    @Test
+    public void testCheckWinX(){
+        service.newGame();
+        service.gameField = new ArrayList<String>(List.of("X", "X", "X", " ", " ", " ", " ", " ", " "));
+        assertEquals("X", service.checkWin());
+    }
+
+    @Test
+    public void testCheckWinO(){
+        service.newGame();
+        service.gameField = new ArrayList<String>(List.of("O", "O", "O", " ", " ", " ", " ", " ", " "));
+        assertEquals("O", service.checkWin());
+    }
+
+    @Test
+    public void testCheckWinNobody(){
+        service.newGame();
+        service.gameField = new ArrayList<String>(List.of(" ", " ", " ", " ", " ", " ", " ", " ", " "));
+        assertEquals(" ", service.checkWin());
+    }
+
+    @Test
+    public void testCheckWinDraw(){
+        service.newGame();
+        service.gameField = new ArrayList<String>(List.of("O", "X", "O", "X", "O", "X", "X", "O", "X"));
+        assertEquals("draw", service.checkWin());
+    }
+
+    @Test
+    public void testSetFieldAlreadySet() {
+        service.newGame();
+        assertTrue(service.setField(0));
+        service.currentPlayer = "O";
+        assertFalse(service.setField(0));
+        assertEquals(service.gameField, List.of("X", " ", " ", " ", " ", " ", " ", " ", " "));
+    }
 }

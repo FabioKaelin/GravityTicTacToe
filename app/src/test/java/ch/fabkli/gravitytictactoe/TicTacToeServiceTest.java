@@ -14,6 +14,34 @@ public class TicTacToeServiceTest extends TestCase {
         assertTrue(ticTacToeService.isActive);
     }
 
+    public void testCheckWinX(){
+        TicTacToeService ticTacToeService = new TicTacToeService();
+        ticTacToeService.newGame();
+        ticTacToeService.gameField = List.of("X", "X", "X", " ", " ", " ", " ", " ", " ");
+        assertEquals(ticTacToeService.checkWin(), "X");
+    }
+
+    public void testCheckWinDraw(){
+        TicTacToeService ticTacToeService = new TicTacToeService();
+        ticTacToeService.newGame();
+        ticTacToeService.gameField = List.of("X", "O", "X", "O", "X", "O", "O", "X", "O");
+        assertEquals(ticTacToeService.checkWin(), "draw");
+    }
+
+    public void testCheckWinO(){
+        TicTacToeService ticTacToeService = new TicTacToeService();
+        ticTacToeService.newGame();
+        ticTacToeService.gameField = List.of("O", "O", "O", " ", " ", " ", " ", " ", " ");
+        assertEquals(ticTacToeService.checkWin(), "O");
+    }
+
+    public void testCheckWinNobody(){
+        TicTacToeService ticTacToeService = new TicTacToeService();
+        ticTacToeService.newGame();
+        ticTacToeService.gameField = List.of(" ", " ", " ", " ", " ", " ", " ", " ", " ");
+        assertEquals(ticTacToeService.checkWin(), " ");
+    }
+
     public void testCheckWin() {
         TicTacToeService ticTacToeService = new TicTacToeService();
         ticTacToeService.newGame();
@@ -40,6 +68,15 @@ public class TicTacToeServiceTest extends TestCase {
         assertEquals(ticTacToeService.checkWin(), "O");
         ticTacToeService.gameField = List.of("X", "O", "X", "O", "X", "O", "O", "X", "O");
         assertEquals(ticTacToeService.checkWin(), "draw");
+    }
+
+    public void testSetFieldAlreadySet() {
+        TicTacToeService ticTacToeService = new TicTacToeService();
+        ticTacToeService.newGame();
+        assertTrue(ticTacToeService.setField(0));
+        ticTacToeService.currentPlayer = "O";
+        assertFalse(ticTacToeService.setField(0));
+        assertEquals(ticTacToeService.gameField, List.of("X", " ", " ", " ", " ", " ", " ", " ", " "));
     }
 
     public void testSetField() {
