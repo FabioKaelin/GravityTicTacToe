@@ -40,9 +40,6 @@ public class TicTacToeService extends Service {
             return gameField.get(0);
         } else if (gameField.get(2).equals(gameField.get(4)) && gameField.get(4).equals(gameField.get(6)) && !gameField.get(2).equals(" ")) {
             return gameField.get(2);
-
-//        } else if (gameField.get(0).equals(gameField.get(3)) && gameField.get(3).equals(gameField.get(6)) && !gameField.get(0).equals(" ")){
-//            return gameField.get(0);
         } else if (!gameField.contains(" ")) {
             return "draw";
         } else {
