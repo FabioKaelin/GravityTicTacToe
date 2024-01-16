@@ -11,13 +11,17 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.View;
+import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,9 +55,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean clicked = false;
     private boolean previewEnabled = true;
 
+    private Vibrator v;
+
+
     public void drawPreview(int XPosition, int ZPosition) {
 
-        if (!tttServiceBound || !tttService.isActive || !previewEnabled)  {
+        if (!tttServiceBound || !tttService.isActive || !previewEnabled) {
             return;
         }
 
@@ -112,7 +119,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         }
 
+
+    }
+
+    public void drawSignField() {
         GridLayout signs = findViewById(R.id.signs);
+        signs.removeAllViews();
         for (int i = 1; i < 30; i++) {
             for (int j = 1; j < 30; j++) {
                 View view = new View(this);
@@ -129,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void drawX(int x, int y) {
-//        Toast.makeText(this, "drawX", Toast.LENGTH_SHORT).show();
 
         List<List<Integer>> viewDefinitions = List.of(
                 List.of(-2, -2),
@@ -204,51 +215,83 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void countDown() {
         final int[] leftTime = {10};
-        TextView countdownView = findViewById(R.id.countdown);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+            long[] wave_time = {0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200};
+            int[] wave_ampl = {0, 5, 0, 10, 0, 15, 0, 20, 0, 25, 0, 30, 0, 35, 0, 40, 0, 45, 0, 50, 0, 55, 0, 60, 0, 65, 0, 70, 0, 75, 0, 80, 0, 85, 0, 90, 0, 95, 0, 100, 0, 105, 0, 110, 0, 115, 0, 120, 0, 125, 0, 130, 0, 135, 0, 140, 0, 145, 0, 150, 0, 155, 0, 160, 0, 165, 0, 170, 0, 175, 0, 180, 0, 185, 0, 190, 0, 195, 0, 200, 0, 205, 0, 210, 0, 215, 0, 220, 0, 225, 0, 230, 0, 235, 0, 240, 0, 245, 0, 255};
+
+
+            VibrationEffect vibrationEffect = null;
+            vibrationEffect = VibrationEffect.createWaveform(wave_time, wave_ampl, -1);
+            v.vibrate(vibrationEffect);
+        }
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
 
                 leftTime[0] -= 1;
-                if (clicked && leftTime[0] >0){
+                if (clicked && leftTime[0] > 0) {
                     clicked = false;
                     leftTime[0] = 0;
                 }
-                if (clicked && leftTime[0] <= 0){
+                if (clicked && leftTime[0] <= 0) {
                     clicked = false;
                 }
                 if (leftTime[0] > 0) {
                     previewEnabled = true;
-
-                    countdownView.setText("Player "+tttService.currentPlayer +" hat noch "+String.valueOf(leftTime[0])+" Sekunden");
+                    output.setText("Player " + tttService.currentPlayer + " hat noch " + leftTime[0] + " Sekunden");
                 }
                 if (leftTime[0] == 0) {
-                    countdownView.setText("Time's up!");
+                    output.setText("Zeit Abgelaufen");
+                    v.cancel();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+
+                            int fieldIndex = (oldY - 1) * 3 + oldX - 1;
+                            boolean isValid = tttService.setField(fieldIndex);
+                            if (!isValid) {
+                                changePlayer();
+                                String winnerString = tttService.currentPlayer + " hat gewonnen";
+                                previewEnabled = false;
+                                Button restart = findViewById(R.id.restartButton);
+                                restart.setVisibility(View.VISIBLE);
+                                output.setText(winnerString);
+                                timer.cancel();
+                            }
+
                             if (tttService.currentPlayer.equals("X")) {
                                 drawX(oldX, oldY);
                             } else {
                                 drawO(oldX, oldY);
                             }
 
-                            int fieldIndex = (oldY - 1) * 3 + oldX - 1;
-                            tttService.setField(fieldIndex);
-//                            tttService.gameField.set(fieldIndex, tttService.currentPlayer);
                             changePlayer();
 
                             previewEnabled = false;
                             drawField();
                             String winner = tttService.checkWin();
-                            TextView output = findViewById(R.id.output);
-                            output.setText(winner);
+                            if (!winner.equals(" ")) {
+                                String winnerString = "";
+                                if (winner.equals("draw")) {
+                                    winnerString = "Unentschieden";
+                                } else if (winner.equals("X")) {
+                                    winnerString = "X hat gewonnen";
+                                } else {
+                                    winnerString = "O hat gewonnen";
+                                }
+                                previewEnabled = false;
+                                Button restart = findViewById(R.id.restartButton);
+                                restart.setVisibility(View.VISIBLE);
+                                output.setText(winnerString);
+                                timer.cancel();
+                            }
                         }
                     });
                 }
                 if (leftTime[0] == -1) {
-                    countdownView.setText("Gerät übergeben!");
+                    output.setText("Gerät übergeben!");
                 }
                 if (leftTime[0] == -5) {
                     countDown();
@@ -278,6 +321,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         TextView title = findViewById(R.id.title);
         title.setText("Gravity Tic Tac Toe");
+        output = findViewById(R.id.output);
+        v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        Button restart = findViewById(R.id.restartButton);
+        restart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                drawField();
+                drawSignField();
+                oldX = 2;
+                oldY = 2;
+                tttService.newGame();
+                drawPreview(oldX, oldY);
+                countDown();
+                Button restart = findViewById(R.id.restartButton);
+                restart.setVisibility(View.GONE);
+            }
+        });
 
         drawField();
     }
@@ -292,15 +353,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+
         ConstraintLayout constraintLayout = findViewById(R.id.constraintLayout);
         constraintLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 if (tttServiceBound && !tttService.isActive) {
                     tttService.newGame();
+                    drawSignField();
+
                     drawPreview(oldX, oldY);
                     countDown();
-                } else if (tttServiceBound && tttService.isActive){
+                } else if (tttServiceBound && tttService.isActive) {
                     clicked = true;
                 }
             }
@@ -321,8 +386,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        TextView x = findViewById(R.id.x);
-        TextView z = findViewById(R.id.z);
 
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
             gravity = event.values;
@@ -333,8 +396,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 SensorManager.getOrientation(rotationMatrix, orientationAngles);
                 long xOrientation = Math.round(Math.toDegrees(orientationAngles[1]));
                 long zOrientation = Math.round(Math.toDegrees(orientationAngles[2]));
-                x.setText("X: " + xOrientation);
-                z.setText("Z: " + zOrientation);
 
                 int XPosition = 2;
                 int ZPosition = 2;
