@@ -4,12 +4,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class TicTacToeService extends Service {
     // Binder given to clients.
@@ -26,7 +23,7 @@ public class TicTacToeService extends Service {
         isActive = true;
     }
 
-    public String checkWin(){
+    public String checkWin() {
         if (gameField.get(0).equals(gameField.get(1)) && gameField.get(1).equals(gameField.get(2)) && !gameField.get(0).equals(" ")) {
             return gameField.get(0);
         } else if (gameField.get(3).equals(gameField.get(4)) && gameField.get(4).equals(gameField.get(5)) && !gameField.get(3).equals(" ")) {
